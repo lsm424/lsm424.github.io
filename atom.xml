@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://lsm424.github.io</id>
-    <title>Gridea</title>
-    <updated>2022-01-10T15:05:19.316Z</updated>
+    <title>lsm424的博客</title>
+    <updated>2022-01-11T00:44:38.437Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://lsm424.github.io"/>
     <link rel="self" href="https://lsm424.github.io/atom.xml"/>
-    <subtitle>温故而知新</subtitle>
+    <subtitle>怕什么真理无穷，进一寸有一寸的欢喜</subtitle>
     <logo>https://lsm424.github.io/images/avatar.png</logo>
     <icon>https://lsm424.github.io/favicon.ico</icon>
-    <rights>All rights reserved 2022, Gridea</rights>
+    <rights>All rights reserved 2022, lsm424的博客</rights>
     <entry>
         <title type="html"><![CDATA[Hello Gridea]]></title>
         <id>https://lsm424.github.io/post/hello-gridea/</id>
