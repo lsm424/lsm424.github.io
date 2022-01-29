@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://lsm424.github.io</id>
     <title>lsm424的博客</title>
-    <updated>2022-01-29T07:21:54.805Z</updated>
+    <updated>2022-01-29T07:29:28.808Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://lsm424.github.io"/>
     <link rel="self" href="https://lsm424.github.io/atom.xml"/>
@@ -28,7 +28,28 @@
 }
 </code></pre>
 <p>如下展示了一个拥有4个bucket的map<br>
-<img src="https://lsm424.github.io/post-images/1643440828994.jpg" alt="" loading="lazy"></p>
+<img src="https://lsm424.github.io/post-images/1643440828994.jpg" alt="" width="500" loading="lazy"><br>
+本例中，由于B=2，所以buckets数组的长读为4（2的2次方），元素通过hash运算后会落到谬个bucket中进行存储。</p>
+<h1 id="2-bucket的数据结构">2、bucket的数据结构</h1>
+<p>bucket的数据结构由runtime/map.go：bmap 定义：</p>
+<pre><code>type bmap struct {
+    tophash [8]uint8  // 存储hash值的高8位
+    data  []byte  // key value数据：key/key/key/.../value/value/value...
+    overflow *hmap   // 溢出bucket的地址
+}
+</code></pre>
+<p>每个bucket可以存储8个键值对。tophash是一个长度为8的整形数组，Hash值低位相同的键存入当前bucket时会将Hash值的高位存储在该数组中，以便后续匹配。 data存key value数据，它的存放顺序是为了节省字节对齐带来的空间浪费。overflow指针指向的是下一个bucket，据此将所有冲突的键连接起来。</p>
+<p>下图展示了bucket存放了8个key-value对<br>
+<img src="https://lsm424.github.io/post-images/1643441145328.jpg" alt="" width="500" loading="lazy"></p>
+<h1 id="3-hash冲突">3、Hash冲突</h1>
+<p>当两个相同key被Hash到同一个bucket时，我们称之为发生冲突，go使用链地址法解决冲突，由于每一个bmap只能存储8个冲突的键值对，超过8个时，就分配一个新的bmap，下图展示冲突后的map<br>
+<img src="https://lsm424.github.io/post-images/1643441260079.jpg" alt="" width="500" loading="lazy"><br>
+冲突不是一件好事，它降低存取效率。</p>
+<h1 id="4-冲突因子">4、冲突因子</h1>
+<p>冲突因子用于衡量一个hash表的冲突情况，公式为：<code>负载因子=键数量 / bucket数量</code><br>
+如果负载因子过大，说明空间利用率低，反之冲突严重，存取效率低。<br>
+当hash表的负载因子过大时，需要申请更多的bucket，并对所有的键值对重新组织，使其均匀的分布到这些buket中，这个过程位rehash。<br>
+不同hash表的实现对负载因子的容忍程度不同，比如redis的map实现中负载因子大于1时就会触发rehash，而go的map则在负载因子达到6.5时触发rehash，因为redis的每个bucket只能存1个键值对，而go的map可以容忍更大的负载因子。</p>
 ]]></content>
     </entry>
     <entry>
