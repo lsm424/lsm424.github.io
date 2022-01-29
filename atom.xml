@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://lsm424.github.io</id>
     <title>lsm424的博客</title>
-    <updated>2022-01-29T05:46:24.169Z</updated>
+    <updated>2022-01-29T07:15:35.311Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://lsm424.github.io"/>
     <link rel="self" href="https://lsm424.github.io/atom.xml"/>
@@ -29,7 +29,7 @@
 <h2 id="2-切片操作">2、切片操作</h2>
 <h3 id="1-使用make创建slice">1）、使用make创建slice</h3>
 <p>可同时指定长度和容量，底层分配一个数组，数组的长度为容量，例如：slice := make([]int, 5, 10)，所创建的slice结构如下<br>
-<img src="https://lsm424.github.io/post-images/1643433812483.png" alt="" loading="lazy"><br>
+<img src="https://lsm424.github.io/post-images/1643433812483.png" alt="" width="400" height="400" loading="lazy"><br>
 该slice长度为5，可使用下标slice[0]~slice[4]来操作里面的元素，capacity为10，表示后续向slice添加新元素不必重新分配内容，直到预留内存不足时再扩容</p>
 <h3 id="2-使用数组创建slice">2)、使用数组创建slice</h3>
 <p>使用数组创建slice时，slice将与原数组共用一部分内存，例如slice := array[5:7]语句所创建的slice结构如下：<br>

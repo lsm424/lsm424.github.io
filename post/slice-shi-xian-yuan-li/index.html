@@ -6,7 +6,7 @@
 
 <title>slice实现原理 | lsm424的博客</title>
 
-<link rel="shortcut icon" href="https://lsm424.github.io/favicon.ico?v=1643435182438">
+<link rel="shortcut icon" href="https://lsm424.github.io/favicon.ico?v=1643440532582">
 
 <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet">
 <link rel="stylesheet" href="https://lsm424.github.io/styles/main.css">
@@ -69,7 +69,7 @@
             
         </div>
         <div style="text-align: center">
-            <form id="gridea-search-form" style="position: relative" data-update="1643435182438"
+            <form id="gridea-search-form" style="position: relative" data-update="1643440532582"
                 action="/search/">
                 <input class="search-input" autocomplete="off" spellcheck="false" name="q" placeholder="搜索文章" />
                 <i class="fas fa-search gt-c-content-color-first" style="position: absolute; top: 9px; left: 10px;"></i>
@@ -115,7 +115,7 @@
 <h2 id="2-切片操作">2、切片操作</h2>
 <h3 id="1-使用make创建slice">1）、使用make创建slice</h3>
 <p>可同时指定长度和容量，底层分配一个数组，数组的长度为容量，例如：slice := make([]int, 5, 10)，所创建的slice结构如下<br>
-<img src="https://lsm424.github.io/post-images/1643433812483.png" alt="" loading="lazy"><br>
+<img src="https://lsm424.github.io/post-images/1643433812483.png" alt="" width="400" height="400" loading="lazy"><br>
 该slice长度为5，可使用下标slice[0]~slice[4]来操作里面的元素，capacity为10，表示后续向slice添加新元素不必重新分配内容，直到预留内存不足时再扩容</p>
 <h3 id="2-使用数组创建slice">2)、使用数组创建slice</h3>
 <p>使用数组创建slice时，slice将与原数组共用一部分内存，例如slice := array[5:7]语句所创建的slice结构如下：<br>
