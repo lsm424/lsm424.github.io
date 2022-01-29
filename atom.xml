@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://lsm424.github.io</id>
     <title>lsm424的博客</title>
-    <updated>2022-01-11T00:44:38.437Z</updated>
+    <updated>2022-01-29T05:23:48.987Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://lsm424.github.io"/>
     <link rel="self" href="https://lsm424.github.io/atom.xml"/>
@@ -10,6 +10,28 @@
     <logo>https://lsm424.github.io/images/avatar.png</logo>
     <icon>https://lsm424.github.io/favicon.ico</icon>
     <rights>All rights reserved 2022, lsm424的博客</rights>
+    <entry>
+        <title type="html"><![CDATA[slice实现原理]]></title>
+        <id>https://lsm424.github.io/post/slice-shi-xian-yuan-li/</id>
+        <link href="https://lsm424.github.io/post/slice-shi-xian-yuan-li/">
+        </link>
+        <updated>2022-01-28T14:28:44.000Z</updated>
+        <content type="html"><![CDATA[<p>切片依托数组实现，底层数组对用户屏蔽，在底层数据容量不足时可以实现自动重分配并生成新的slice</p>
+<p>## 1、数据结构</p>
+<p>源码包中src/runtime/slice.go: slice 定义了slice的数据结构：</p>
+<pre><code>type slice struct {
+    array unsafe.Pointer
+    len int
+    cap int 
+}
+</code></pre>
+<p>从数据结构上看slice很清晰，array指针指向底层数组，len表示切片长度，cap表示底层数组容量</p>
+<p>## 2、切片操作</p>
+<p>### 1）、使用make创建slice</p>
+<p>可同时指定长度和容量，底层分配一个数组，数组的长度为容量，例如：slice := make([]int, 5, 10)，所创建的slice结构如下<br>
+<img src="https://lsm424.github.io/post-images/1643433812483.png" alt="" loading="lazy"></p>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[Hello Gridea]]></title>
         <id>https://lsm424.github.io/post/hello-gridea/</id>
