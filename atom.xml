@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://lsm424.github.io</id>
     <title>lsm424的博客</title>
-    <updated>2022-01-29T07:29:28.808Z</updated>
+    <updated>2022-01-29T10:06:09.567Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://lsm424.github.io"/>
     <link rel="self" href="https://lsm424.github.io/atom.xml"/>
@@ -18,7 +18,7 @@
         <updated>2022-01-29T07:16:53.000Z</updated>
         <content type="html"><![CDATA[<p><strong>map使用Hash表作为底层实现，一个Hash表可以有多个bucket，而每个bucket保存了map中的一个或一组键值对</strong></p>
 <h1 id="1-map的数据结构">1、map的数据结构</h1>
-<p>map的数据结构由runtime/map.go:hmap 定义</p>
+<p>  map的数据结构由runtime/map.go:hmap 定义</p>
 <pre><code>type hmap struct {
     count int  // 当前保存的元素
     B  uint8  // bucket数组的大小
@@ -31,25 +31,48 @@
 <img src="https://lsm424.github.io/post-images/1643440828994.jpg" alt="" width="500" loading="lazy"><br>
 本例中，由于B=2，所以buckets数组的长读为4（2的2次方），元素通过hash运算后会落到谬个bucket中进行存储。</p>
 <h1 id="2-bucket的数据结构">2、bucket的数据结构</h1>
-<p>bucket的数据结构由runtime/map.go：bmap 定义：</p>
+<p>  bucket的数据结构由runtime/map.go：bmap 定义：</p>
 <pre><code>type bmap struct {
     tophash [8]uint8  // 存储hash值的高8位
     data  []byte  // key value数据：key/key/key/.../value/value/value...
     overflow *hmap   // 溢出bucket的地址
 }
 </code></pre>
-<p>每个bucket可以存储8个键值对。tophash是一个长度为8的整形数组，Hash值低位相同的键存入当前bucket时会将Hash值的高位存储在该数组中，以便后续匹配。 data存key value数据，它的存放顺序是为了节省字节对齐带来的空间浪费。overflow指针指向的是下一个bucket，据此将所有冲突的键连接起来。</p>
+<p>  每个bucket可以存储8个键值对。tophash是一个长度为8的整形数组，Hash值低位相同的键存入当前bucket时会将Hash值的高位存储在该数组中，以便后续匹配。 data存key value数据，它的存放顺序是为了节省字节对齐带来的空间浪费。overflow指针指向的是下一个bucket，据此将所有冲突的键连接起来。</p>
 <p>下图展示了bucket存放了8个key-value对<br>
 <img src="https://lsm424.github.io/post-images/1643441145328.jpg" alt="" width="500" loading="lazy"></p>
 <h1 id="3-hash冲突">3、Hash冲突</h1>
-<p>当两个相同key被Hash到同一个bucket时，我们称之为发生冲突，go使用链地址法解决冲突，由于每一个bmap只能存储8个冲突的键值对，超过8个时，就分配一个新的bmap，下图展示冲突后的map<br>
+<p>  当两个相同key被Hash到同一个bucket时，我们称之为发生冲突，go使用链地址法解决冲突，由于每一个bmap只能存储8个冲突的键值对，超过8个时，就分配一个新的bmap，下图展示冲突后的map<br>
 <img src="https://lsm424.github.io/post-images/1643441260079.jpg" alt="" width="500" loading="lazy"><br>
 冲突不是一件好事，它降低存取效率。</p>
 <h1 id="4-冲突因子">4、冲突因子</h1>
-<p>冲突因子用于衡量一个hash表的冲突情况，公式为：<code>负载因子=键数量 / bucket数量</code><br>
-如果负载因子过大，说明空间利用率低，反之冲突严重，存取效率低。<br>
-当hash表的负载因子过大时，需要申请更多的bucket，并对所有的键值对重新组织，使其均匀的分布到这些buket中，这个过程位rehash。<br>
-不同hash表的实现对负载因子的容忍程度不同，比如redis的map实现中负载因子大于1时就会触发rehash，而go的map则在负载因子达到6.5时触发rehash，因为redis的每个bucket只能存1个键值对，而go的map可以容忍更大的负载因子。</p>
+<p>  冲突因子用于衡量一个hash表的冲突情况，公式为：<code>负载因子=键数量 / bucket数量</code><br>
+  如果负载因子过大，说明空间利用率低，反之冲突严重，存取效率低。<br>
+  当hash表的负载因子过大时，需要申请更多的bucket，并对所有的键值对重新组织，使其均匀的分布到这些buket中，这个过程位rehash。<br>
+  不同hash表的实现对负载因子的容忍程度不同，比如redis的map实现中负载因子大于1时就会触发rehash，而go的map则在负载因子达到6.5时触发rehash，因为redis的每个bucket只能存1个键值对，而go的map可以容忍更大的负载因子。</p>
+<h1 id="5-扩容">5、扩容</h1>
+<h2 id="1-扩容条件">1）、扩容条件</h2>
+<p>  降低负载因子常用的手段是扩容，当新元素要添加到map时会检查是否要扩容，扩容实际上是空间换时间的手段。<br>
+  触发扩容需要满足以下任一条件：</p>
+<ul>
+<li>负载因子大于6.5时，即平均每个bucket存储到的键值对达到6.5个以上。</li>
+<li>overflow的数量大于2的15次方，即overflow的数量超过32768。</li>
+</ul>
+<h2 id="2-增量扩容">2）、增量扩容</h2>
+<p>  如果map存储了数以亿计的键值对，一次性搬迁会造成比较大的延时，所以go采用了逐步搬迁的策略，即每次访问map时会触发一次搬迁，每次搬迁2个键值对。下图包含了1个bucket满载的map。<br>
+<img src="https://lsm424.github.io/post-images/1643450425464.jpg" alt="" width="500" loading="lazy"><br>
+  当前map存储了7个键值对，只有1个bucket，因此负载因子为7，再次添加数据时会触发扩容，扩容之后再将新的键值对写入新的bucket中，当添加第8个键值对时，扩容后的示意图如下：<br>
+<img src="https://lsm424.github.io/post-images/1643450462801.jpg" alt="" width="500" loading="lazy"><br>
+  扩容时的处理非常巧妙，先是让hmap数据结构中的oldbuckets成员指向原buckets数组，然后申请新的bucket数组（长度为原来的2倍），并将数组指针保存到hmap数据结构中的bucktets成员中，这样就完成了新老buckets数组的交换，后续的迁移工作是从oldbuckets数组中逐步搬迁键值对到新的buckets数组中。待oldbuckest数组中的所有键值对搬迁完毕后，就可以安全的释放oldbuckets数组了。</p>
+<h1 id="6-增删查改">6、增删查改</h1>
+<h2 id="1-查询">1）、查询</h2>
+<p>  根据key值计算hash值，取hash值的低位与hmap.B取模来确定bucket的位置，取hash值高位，在tophash数组中查询；如果tophash[i]中存储的hash值与当前key 的Hash值相同，则获取tophash[i]的key值进行比较。如果当前bucket中没有找到，则从溢出bucket中查询。</p>
+<p><em>注意：如果当前map在搬迁过程中，则优先从oldbuckets数组中查找，不再从新的buckets数组中查找。</em></p>
+<h2 id="2-更新-增加">2）、更新、增加</h2>
+<p>  根据key值计算hash值，取hash值的低位与hmap.B取模来确定bucket的位置，查找该key是否已经存在，如果存在则直接更新值。如果key不存在，则从该bucket中寻找空余位置并插入。</p>
+<p><em>注意：如果当前map处于搬迁过程中，那么新元素会直接添加到新的buckets数组中，但是查找过程仍然从oldbuckets数组中开始。</em></p>
+<h2 id="3-删除">3）、删除</h2>
+<p>  删除元素实际上是先查找元素，如果元素存在则把元素从相同的bucket中清理，否则什么都不做。</p>
 ]]></content>
     </entry>
     <entry>
