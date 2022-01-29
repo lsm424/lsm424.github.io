@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://lsm424.github.io</id>
     <title>lsm424的博客</title>
-    <updated>2022-01-29T07:16:14.931Z</updated>
+    <updated>2022-01-29T07:21:54.805Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://lsm424.github.io"/>
     <link rel="self" href="https://lsm424.github.io/atom.xml"/>
@@ -10,6 +10,27 @@
     <logo>https://lsm424.github.io/images/avatar.png</logo>
     <icon>https://lsm424.github.io/favicon.ico</icon>
     <rights>All rights reserved 2022, lsm424的博客</rights>
+    <entry>
+        <title type="html"><![CDATA[map实现原理]]></title>
+        <id>https://lsm424.github.io/post/map-shi-xian-yuan-li/</id>
+        <link href="https://lsm424.github.io/post/map-shi-xian-yuan-li/">
+        </link>
+        <updated>2022-01-29T07:16:53.000Z</updated>
+        <content type="html"><![CDATA[<p><strong>map使用Hash表作为底层实现，一个Hash表可以有多个bucket，而每个bucket保存了map中的一个或一组键值对</strong></p>
+<h1 id="1-map的数据结构">1、map的数据结构</h1>
+<p>map的数据结构由runtime/map.go:hmap 定义</p>
+<pre><code>type hmap struct {
+    count int  // 当前保存的元素
+    B  uint8  // bucket数组的大小
+    buckets  unsafe.Pointer  // bucket数组，数组的长度为2的B次方
+    oldbuckets unsafe.Pointer  // 老旧bucket数组，用于扩容
+    ...
+}
+</code></pre>
+<p>如下展示了一个拥有4个bucket的map<br>
+<img src="https://lsm424.github.io/post-images/1643440828994.jpg" alt="" loading="lazy"></p>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[slice实现原理]]></title>
         <id>https://lsm424.github.io/post/slice-shi-xian-yuan-li/</id>
@@ -29,15 +50,15 @@
 <h2 id="2-切片操作">2、切片操作</h2>
 <h3 id="1-使用make创建slice">1）、使用make创建slice</h3>
 <p>可同时指定长度和容量，底层分配一个数组，数组的长度为容量，例如：slice := make([]int, 5, 10)，所创建的slice结构如下<br>
-<img src="https://lsm424.github.io/post-images/1643433812483.png" alt="" width="400" height="400" loading="lazy"><br>
+<img src="https://lsm424.github.io/post-images/1643433812483.png" alt="" width="400" loading="lazy"><br>
 该slice长度为5，可使用下标slice[0]~slice[4]来操作里面的元素，capacity为10，表示后续向slice添加新元素不必重新分配内容，直到预留内存不足时再扩容</p>
 <h3 id="2-使用数组创建slice">2)、使用数组创建slice</h3>
 <p>使用数组创建slice时，slice将与原数组共用一部分内存，例如slice := array[5:7]语句所创建的slice结构如下：<br>
-<img src="https://lsm424.github.io/post-images/1643434472348.jpg" alt="" width="400" height="400" loading="lazy"><br>
+<img src="https://lsm424.github.io/post-images/1643434472348.jpg" alt="" width="400" loading="lazy"><br>
 切片从数据array[5]开始，到数组array[7]结束（不含array[7]），即切片长度为2，数组后面的内容都作为切片的预留内存，即capacity为5，意味着数组和切片共享底层内存</p>
 <h3 id="3-切片扩容">3）、切片扩容</h3>
 <p>使用append向slice追加元素时，如果slice空间不足，则会触发slice扩容，扩容实际上是重新分配一个更大的内存，将原slice的数组拷贝进新的slice，然后返回新的slice，扩容后再将数据追加进去。例如向一个 cap为5且len也为5的slice再次追加1个元素时，就会发生扩容<br>
-<img src="https://lsm424.github.io/post-images/1643434903681.jpg" alt="" width="400" height="400" loading="lazy"></p>
+<img src="https://lsm424.github.io/post-images/1643434903681.jpg" alt="" width="400" loading="lazy"></p>
 <p>扩容影响cap，会把数据拷贝到新的slice中，追加数据由append在扩容结束后完成，由上图可见，slice的长度为5，但是容量由5变成10，原来slice中的数据也都拷贝到了新的slice指向的数组中。</p>
 <p>扩容的选择遵循以下原则：</p>
 <ul>
