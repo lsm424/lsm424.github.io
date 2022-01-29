@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://lsm424.github.io</id>
     <title>lsm424的博客</title>
-    <updated>2022-01-29T07:15:35.311Z</updated>
+    <updated>2022-01-29T07:16:14.931Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://lsm424.github.io"/>
     <link rel="self" href="https://lsm424.github.io/atom.xml"/>
@@ -33,11 +33,11 @@
 该slice长度为5，可使用下标slice[0]~slice[4]来操作里面的元素，capacity为10，表示后续向slice添加新元素不必重新分配内容，直到预留内存不足时再扩容</p>
 <h3 id="2-使用数组创建slice">2)、使用数组创建slice</h3>
 <p>使用数组创建slice时，slice将与原数组共用一部分内存，例如slice := array[5:7]语句所创建的slice结构如下：<br>
-<img src="https://lsm424.github.io/post-images/1643434472348.jpg" alt="" loading="lazy"><br>
+<img src="https://lsm424.github.io/post-images/1643434472348.jpg" alt="" width="400" height="400" loading="lazy"><br>
 切片从数据array[5]开始，到数组array[7]结束（不含array[7]），即切片长度为2，数组后面的内容都作为切片的预留内存，即capacity为5，意味着数组和切片共享底层内存</p>
 <h3 id="3-切片扩容">3）、切片扩容</h3>
 <p>使用append向slice追加元素时，如果slice空间不足，则会触发slice扩容，扩容实际上是重新分配一个更大的内存，将原slice的数组拷贝进新的slice，然后返回新的slice，扩容后再将数据追加进去。例如向一个 cap为5且len也为5的slice再次追加1个元素时，就会发生扩容<br>
-<img src="https://lsm424.github.io/post-images/1643434903681.jpg" alt="" loading="lazy"></p>
+<img src="https://lsm424.github.io/post-images/1643434903681.jpg" alt="" width="400" height="400" loading="lazy"></p>
 <p>扩容影响cap，会把数据拷贝到新的slice中，追加数据由append在扩容结束后完成，由上图可见，slice的长度为5，但是容量由5变成10，原来slice中的数据也都拷贝到了新的slice指向的数组中。</p>
 <p>扩容的选择遵循以下原则：</p>
 <ul>
