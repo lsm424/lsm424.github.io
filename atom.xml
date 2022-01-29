@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://lsm424.github.io</id>
     <title>lsm424的博客</title>
-    <updated>2022-01-29T10:06:09.567Z</updated>
+    <updated>2022-01-29T10:07:11.859Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://lsm424.github.io"/>
     <link rel="self" href="https://lsm424.github.io/atom.xml"/>
@@ -43,7 +43,7 @@
 <img src="https://lsm424.github.io/post-images/1643441145328.jpg" alt="" width="500" loading="lazy"></p>
 <h1 id="3-hash冲突">3、Hash冲突</h1>
 <p>  当两个相同key被Hash到同一个bucket时，我们称之为发生冲突，go使用链地址法解决冲突，由于每一个bmap只能存储8个冲突的键值对，超过8个时，就分配一个新的bmap，下图展示冲突后的map<br>
-<img src="https://lsm424.github.io/post-images/1643441260079.jpg" alt="" width="500" loading="lazy"><br>
+<img src="https://lsm424.github.io/post-images/1643441260079.jpg" alt="" width="650" loading="lazy"><br>
 冲突不是一件好事，它降低存取效率。</p>
 <h1 id="4-冲突因子">4、冲突因子</h1>
 <p>  冲突因子用于衡量一个hash表的冲突情况，公式为：<code>负载因子=键数量 / bucket数量</code><br>
@@ -60,9 +60,9 @@
 </ul>
 <h2 id="2-增量扩容">2）、增量扩容</h2>
 <p>  如果map存储了数以亿计的键值对，一次性搬迁会造成比较大的延时，所以go采用了逐步搬迁的策略，即每次访问map时会触发一次搬迁，每次搬迁2个键值对。下图包含了1个bucket满载的map。<br>
-<img src="https://lsm424.github.io/post-images/1643450425464.jpg" alt="" width="500" loading="lazy"><br>
+<img src="https://lsm424.github.io/post-images/1643450425464.jpg" alt="" width="650" loading="lazy"><br>
   当前map存储了7个键值对，只有1个bucket，因此负载因子为7，再次添加数据时会触发扩容，扩容之后再将新的键值对写入新的bucket中，当添加第8个键值对时，扩容后的示意图如下：<br>
-<img src="https://lsm424.github.io/post-images/1643450462801.jpg" alt="" width="500" loading="lazy"><br>
+<img src="https://lsm424.github.io/post-images/1643450462801.jpg" alt="" width="650" loading="lazy"><br>
   扩容时的处理非常巧妙，先是让hmap数据结构中的oldbuckets成员指向原buckets数组，然后申请新的bucket数组（长度为原来的2倍），并将数组指针保存到hmap数据结构中的bucktets成员中，这样就完成了新老buckets数组的交换，后续的迁移工作是从oldbuckets数组中逐步搬迁键值对到新的buckets数组中。待oldbuckest数组中的所有键值对搬迁完毕后，就可以安全的释放oldbuckets数组了。</p>
 <h1 id="6-增删查改">6、增删查改</h1>
 <h2 id="1-查询">1）、查询</h2>
