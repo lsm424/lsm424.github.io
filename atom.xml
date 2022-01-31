@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://lsm424.github.io</id>
     <title>lsm424的博客</title>
-    <updated>2022-01-31T14:19:12.348Z</updated>
+    <updated>2022-01-31T15:42:31.909Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://lsm424.github.io"/>
     <link rel="self" href="https://lsm424.github.io/atom.xml"/>
@@ -10,6 +10,72 @@
     <logo>https://lsm424.github.io/images/avatar.png</logo>
     <icon>https://lsm424.github.io/favicon.ico</icon>
     <rights>All rights reserved 2022, lsm424的博客</rights>
+    <entry>
+        <title type="html"><![CDATA[树莓派装机]]></title>
+        <id>https://lsm424.github.io/post/shu-mei-pai-zhuang-ji/</id>
+        <link href="https://lsm424.github.io/post/shu-mei-pai-zhuang-ji/">
+        </link>
+        <updated>2022-01-31T14:20:02.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="1-下载镜像">1、下载镜像</h1>
+<p>一般选择从官方的镜像 Raspbian OS，但是官网的比较慢，一般选择国内镜像下载，有两个：</p>
+<ul>
+<li><a href="https://mirrors.tuna.tsinghua.edu.cn/raspberry-pi-os-images/">TUNA镜像站</a></li>
+<li><a href="https://mirrors.sjtug.sjtu.edu.cn/raspberry-pi-os-images/">SJTUG镜像站</a></li>
+</ul>
+<p>同一个版本的镜像分为三种：</p>
+<ul>
+<li><strong>Raspberry Pi OS with desktop</strong> 即桌面版，1G左右大小，包含基本的软件</li>
+<li><strong>Raspberry Pi OS with desktop and recommended software</strong>即full版本，包含一些办公软件，会比较大，3G左右，</li>
+<li><strong>Raspberry Pi OS Lite</strong>即轻量级版，不带桌面，不到500M</li>
+</ul>
+<p>一般选择大小中等的桌面版，因为full版本太大，刷机时间以及磁盘占用都增加，包含的软件一般实际用不到，除非真的是办公使用，而轻量级版本缺少桌面，在一些配置方面不是很方面。常用的桌面版直达门：<br>
+<a href="https://mirrors.sjtug.sjtu.edu.cn/raspberry-pi-os-images/raspios_armhf/images/raspios_armhf-2021-11-08/2021-10-30-raspios-bullseye-armhf.zip">2021-10-30 推荐版</a></p>
+<h1 id="2-下载刷镜像软件raspberry-pi-imager">2、下载刷镜像软件Raspberry Pi Imager</h1>
+<p>到官网下载刷机软件：https://www.raspberrypi.com/software/<br>
+软件直达门<br>
+<a href="https://downloads.raspberrypi.org/imager/imager_1.6.2.exe">windows版本</a><br>
+<a href="https://downloads.raspberrypi.org/imager/imager_1.6.2.dmg">mac版本</a></p>
+<h1 id="3-刷机">3、刷机</h1>
+<p>可以使用u盘或者sd卡刷机，对于这二者方式的刷机和启动没有任何区别。树莓派会优先从sd卡启动，没有的话就会使用usb接口启动。</p>
+<h2 id="31-刷机步骤">3.1 刷机步骤：</h2>
+<p>将u盘或者tf卡插入电脑，启动上一步下载的Raspberry Pi Imager，选择刚插入的磁盘，再选择第一步下载的镜像，点击write，等待10分钟左右完成。</p>
+<h2 id="32-重新刷机">3.2 重新刷机</h2>
+<p>进入windows的磁盘管理或者使用diskgenius，清理分区（包括boot、root分区），重新新建分区，再格式化，最后再重新按照上一步刷机。</p>
+<h2 id="33-常见问题">3.3 常见问题</h2>
+<h3 id="331-刷机后我的磁盘怎么变小了">3.3.1 刷机后我的磁盘怎么变小了</h3>
+<p>刷机后，windows你可能上看到十几个G的u盘或者sd卡只有200M了，不要惊慌！这是因为linux的分区在windows下看不到。装了Linux系统之后，SD卡会分成三种格式的分区，分别是：FAT32、EXT3、SWAP2。<br>
+Ext3区属于linux的文件系统，就和win的系统盘C盘一样<br>
+Swap区为linux的虚拟内存区，主要在物理内存不够用的时候，做缓存用的。<br>
+以上两个，是Linux系统的分区。<br>
+FAT32就是那“200M”了</p>
+<h3 id="332-到底用u盘还是sd卡呢">3.3.2 到底用u盘还是sd卡呢</h3>
+<p>经验表明：<strong>使用tf卡会十分卡顿</strong>，第一次开机都要三四分钟，<strong>使用了ssd的移动硬盘接usb3.0速度超快</strong>，开机速度10秒左右，测试过ssd的读写速度如下：</p>
+<pre><code>pi@raspberrypi:~ $ dd if=/dev/zero of=/tmp/output.img bs=4k count=256k
+记录了262144+0 的读入
+记录了262144+0 的写出
+1073741824字节（1.1 GB，1.0 GiB）已复制，5.59087 s，192 MB/s
+pi@raspberrypi:~ $ dd if=/tmp/output.img bs=4k of=/dev/null
+记录了262144+0 的读入
+记录了262144+0 的写出
+1073741824字节（1.1 GB，1.0 GiB）已复制，4.06454 s，264 MB/s
+</code></pre>
+<p>从上面测试结果可以看出，写入速度192MB/s，读取速度264MB/s！</p>
+<h3 id="333-有时刷机出现锁该卷时发生错误-错误5-拒绝访问">3.3.3 有时刷机出现“锁该卷时发生错误 错误5 拒绝访问”</h3>
+<p>win+R进入cmd指向如下命令：<br>
+1、diskpart<br>
+2、list disk  # 查看所有磁盘，找到u盘或者sd卡所在的磁盘编号<br>
+3、select disk 2   # 2要改成具体你所使用磁盘的编号<br>
+4、clean</p>
+<h1 id="4-启动并设置ssh">4、启动并设置ssh</h1>
+<p>插入sd卡或者u盘，接上hdmi显示器，耐心等待一会（期间可能会有短暂黑屏），会出现桌面，第一次登录会引导设置语言、pi用户密码、wifi、以及软件更新（这一步建议跳过）.</p>
+<h1 id="5-设置ssh-vnc">5、设置ssh、vnc</h1>
+<p>设置ssh、vnc，方面后续无线连接进行开发<br>
+进入rasp-config<br>
+<img src="https://lsm424.github.io/post-images/1643643523857.png" alt="" width="400" loading="lazy"><br>
+将下列ssh、vnc勾选，启动服务<br>
+<img src="https://lsm424.github.io/post-images/1643643643084.png" alt="" width="400" loading="lazy"></p>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[map实现原理]]></title>
         <id>https://lsm424.github.io/post/map-shi-xian-yuan-li/</id>

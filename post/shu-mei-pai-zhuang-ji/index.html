@@ -4,7 +4,7 @@
 <meta name="description" content="" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<title>slice实现原理 | lsm424的博客</title>
+<title>树莓派装机 | lsm424的博客</title>
 
 <link rel="shortcut icon" href="https://lsm424.github.io/favicon.ico?v=1643643750006">
 
@@ -101,56 +101,73 @@
         <div class="post-detail gt-bg-theme-color-second">
             <article class="gt-post-content">
                 <h2 class="post-title">
-                    slice实现原理
+                    树莓派装机
                 </h2>
                 <div class="post-info">
                     <time class="post-time gt-c-content-color-first">
-                        · 2022-01-28 ·
+                        · 2022-01-31 ·
                     </time>
                     
                 </div>
                 <div class="post-content">
-                    <p><strong>切片依托数组实现，底层数组对用户屏蔽，在底层数据容量不足时可以实现自动重分配并生成新的slice</strong></p>
-<h2 id="1-数据结构">1、数据结构</h2>
-<p>源码包中src/runtime/slice.go: slice 定义了slice的数据结构：</p>
-<pre><code>type slice struct {
-    array unsafe.Pointer
-    len int
-    cap int 
-}
+                    <h1 id="1-下载镜像">1、下载镜像</h1>
+<p>一般选择从官方的镜像 Raspbian OS，但是官网的比较慢，一般选择国内镜像下载，有两个：</p>
+<ul>
+<li><a href="https://mirrors.tuna.tsinghua.edu.cn/raspberry-pi-os-images/">TUNA镜像站</a></li>
+<li><a href="https://mirrors.sjtug.sjtu.edu.cn/raspberry-pi-os-images/">SJTUG镜像站</a></li>
+</ul>
+<p>同一个版本的镜像分为三种：</p>
+<ul>
+<li><strong>Raspberry Pi OS with desktop</strong> 即桌面版，1G左右大小，包含基本的软件</li>
+<li><strong>Raspberry Pi OS with desktop and recommended software</strong>即full版本，包含一些办公软件，会比较大，3G左右，</li>
+<li><strong>Raspberry Pi OS Lite</strong>即轻量级版，不带桌面，不到500M</li>
+</ul>
+<p>一般选择大小中等的桌面版，因为full版本太大，刷机时间以及磁盘占用都增加，包含的软件一般实际用不到，除非真的是办公使用，而轻量级版本缺少桌面，在一些配置方面不是很方面。常用的桌面版直达门：<br>
+<a href="https://mirrors.sjtug.sjtu.edu.cn/raspberry-pi-os-images/raspios_armhf/images/raspios_armhf-2021-11-08/2021-10-30-raspios-bullseye-armhf.zip">2021-10-30 推荐版</a></p>
+<h1 id="2-下载刷镜像软件raspberry-pi-imager">2、下载刷镜像软件Raspberry Pi Imager</h1>
+<p>到官网下载刷机软件：https://www.raspberrypi.com/software/<br>
+软件直达门<br>
+<a href="https://downloads.raspberrypi.org/imager/imager_1.6.2.exe">windows版本</a><br>
+<a href="https://downloads.raspberrypi.org/imager/imager_1.6.2.dmg">mac版本</a></p>
+<h1 id="3-刷机">3、刷机</h1>
+<p>可以使用u盘或者sd卡刷机，对于这二者方式的刷机和启动没有任何区别。树莓派会优先从sd卡启动，没有的话就会使用usb接口启动。</p>
+<h2 id="31-刷机步骤">3.1 刷机步骤：</h2>
+<p>将u盘或者tf卡插入电脑，启动上一步下载的Raspberry Pi Imager，选择刚插入的磁盘，再选择第一步下载的镜像，点击write，等待10分钟左右完成。</p>
+<h2 id="32-重新刷机">3.2 重新刷机</h2>
+<p>进入windows的磁盘管理或者使用diskgenius，清理分区（包括boot、root分区），重新新建分区，再格式化，最后再重新按照上一步刷机。</p>
+<h2 id="33-常见问题">3.3 常见问题</h2>
+<h3 id="331-刷机后我的磁盘怎么变小了">3.3.1 刷机后我的磁盘怎么变小了</h3>
+<p>刷机后，windows你可能上看到十几个G的u盘或者sd卡只有200M了，不要惊慌！这是因为linux的分区在windows下看不到。装了Linux系统之后，SD卡会分成三种格式的分区，分别是：FAT32、EXT3、SWAP2。<br>
+Ext3区属于linux的文件系统，就和win的系统盘C盘一样<br>
+Swap区为linux的虚拟内存区，主要在物理内存不够用的时候，做缓存用的。<br>
+以上两个，是Linux系统的分区。<br>
+FAT32就是那“200M”了</p>
+<h3 id="332-到底用u盘还是sd卡呢">3.3.2 到底用u盘还是sd卡呢</h3>
+<p>经验表明：<strong>使用tf卡会十分卡顿</strong>，第一次开机都要三四分钟，<strong>使用了ssd的移动硬盘接usb3.0速度超快</strong>，开机速度10秒左右，测试过ssd的读写速度如下：</p>
+<pre><code>pi@raspberrypi:~ $ dd if=/dev/zero of=/tmp/output.img bs=4k count=256k
+记录了262144+0 的读入
+记录了262144+0 的写出
+1073741824字节（1.1 GB，1.0 GiB）已复制，5.59087 s，192 MB/s
+pi@raspberrypi:~ $ dd if=/tmp/output.img bs=4k of=/dev/null
+记录了262144+0 的读入
+记录了262144+0 的写出
+1073741824字节（1.1 GB，1.0 GiB）已复制，4.06454 s，264 MB/s
 </code></pre>
-<p>从数据结构上看slice很清晰，array指针指向底层数组，len表示切片长度，cap表示底层数组容量</p>
-<h2 id="2-切片操作">2、切片操作</h2>
-<h3 id="1-使用make创建slice">1）、使用make创建slice</h3>
-<p>可同时指定长度和容量，底层分配一个数组，数组的长度为容量，例如：slice := make([]int, 5, 10)，所创建的slice结构如下<br>
-<img src="https://lsm424.github.io/post-images/1643433812483.png" alt="" width="400" loading="lazy"><br>
-该slice长度为5，可使用下标slice[0]~slice[4]来操作里面的元素，capacity为10，表示后续向slice添加新元素不必重新分配内容，直到预留内存不足时再扩容</p>
-<h3 id="2-使用数组创建slice">2)、使用数组创建slice</h3>
-<p>使用数组创建slice时，slice将与原数组共用一部分内存，例如slice := array[5:7]语句所创建的slice结构如下：<br>
-<img src="https://lsm424.github.io/post-images/1643434472348.jpg" alt="" width="400" loading="lazy"><br>
-切片从数据array[5]开始，到数组array[7]结束（不含array[7]），即切片长度为2，数组后面的内容都作为切片的预留内存，即capacity为5，意味着数组和切片共享底层内存</p>
-<h3 id="3-切片扩容">3）、切片扩容</h3>
-<p>使用append向slice追加元素时，如果slice空间不足，则会触发slice扩容，扩容实际上是重新分配一个更大的内存，将原slice的数组拷贝进新的slice，然后返回新的slice，扩容后再将数据追加进去。例如向一个 cap为5且len也为5的slice再次追加1个元素时，就会发生扩容<br>
-<img src="https://lsm424.github.io/post-images/1643434903681.jpg" alt="" width="400" loading="lazy"></p>
-<p>扩容影响cap，会把数据拷贝到新的slice中，追加数据由append在扩容结束后完成，由上图可见，slice的长度为5，但是容量由5变成10，原来slice中的数据也都拷贝到了新的slice指向的数组中。</p>
-<p>扩容的选择遵循以下原则：</p>
-<ul>
-<li>如果原slice的cap小雨1024，则新的容量扩大到原来的2倍。这种采用较大的扩容倍速，可以避免频繁扩容，从而减少内存分配次数和数据拷贝的代价</li>
-<li>如果原slice的cap大于等于1024，则新的容量扩大到原来的1.25倍。这种采用较小的扩容倍速，可以避免浪费空间<br>
-同时还会考虑元素类型与内存分配原则，对实际扩张做一些微调。</li>
-</ul>
-<h3 id="4-一些建议">4)、一些建议</h3>
-<ul>
-<li>
-<p>创建切片可以根据实际需要分配容量，尽量避免在append过程中扩容，有利于提升性能。</p>
-</li>
-<li>
-<p>拷贝切片时需要判断实际拷贝的元素个数</p>
-</li>
-<li>
-<p>谨慎使用多个切片操作同一个数组，以防止读写冲突。</p>
-</li>
-</ul>
+<p>从上面测试结果可以看出，写入速度192MB/s，读取速度264MB/s！</p>
+<h3 id="333-有时刷机出现锁该卷时发生错误-错误5-拒绝访问">3.3.3 有时刷机出现“锁该卷时发生错误 错误5 拒绝访问”</h3>
+<p>win+R进入cmd指向如下命令：<br>
+1、diskpart<br>
+2、list disk  # 查看所有磁盘，找到u盘或者sd卡所在的磁盘编号<br>
+3、select disk 2   # 2要改成具体你所使用磁盘的编号<br>
+4、clean</p>
+<h1 id="4-启动并设置ssh">4、启动并设置ssh</h1>
+<p>插入sd卡或者u盘，接上hdmi显示器，耐心等待一会（期间可能会有短暂黑屏），会出现桌面，第一次登录会引导设置语言、pi用户密码、wifi、以及软件更新（这一步建议跳过）.</p>
+<h1 id="5-设置ssh-vnc">5、设置ssh、vnc</h1>
+<p>设置ssh、vnc，方面后续无线连接进行开发<br>
+进入rasp-config<br>
+<img src="https://lsm424.github.io/post-images/1643643523857.png" alt="" width="400" loading="lazy"><br>
+将下列ssh、vnc勾选，启动服务<br>
+<img src="https://lsm424.github.io/post-images/1643643643084.png" alt="" width="400" loading="lazy"></p>
 
                 </div>
             </article>
@@ -159,8 +176,8 @@
         
             <div class="next-post">
                 <div class="next gt-c-content-color-first">下一篇</div>
-                <a href="https://lsm424.github.io/post/hello-gridea/" class="post-title gt-a-link">
-                    Hello Gridea
+                <a href="https://lsm424.github.io/post/map-shi-xian-yuan-li/" class="post-title gt-a-link">
+                    map实现原理
                 </a>
             </div>
         
