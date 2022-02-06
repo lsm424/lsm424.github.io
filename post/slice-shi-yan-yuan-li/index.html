@@ -4,7 +4,7 @@
 <meta name="description" content="" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<title>关于 | lsm424的博客</title>
+<title>slice实验原理 | lsm424的博客</title>
 
 <link rel="shortcut icon" href="https://lsm424.github.io/favicon.ico?v=1644138860680">
 
@@ -101,27 +101,58 @@
         <div class="post-detail gt-bg-theme-color-second">
             <article class="gt-post-content">
                 <h2 class="post-title">
-                    关于
+                    slice实验原理
                 </h2>
                 <div class="post-info">
                     <time class="post-time gt-c-content-color-first">
-                        · 2019-01-25 ·
+                        · 2022-02-06 ·
                     </time>
                     
                 </div>
                 <div class="post-content">
-                    <blockquote>
-<p>欢迎来到我的小站呀，很高兴遇见你！🤝</p>
-</blockquote>
-<h2 id="关于本站">🏠 关于本站</h2>
-<h2 id="博主是谁">👨‍💻 博主是谁</h2>
-<h2 id="兴趣爱好">⛹ 兴趣爱好</h2>
-<h2 id="联系我呀">📬 联系我呀</h2>
+                    <p>切片依托数组实现，底层数组对用户屏蔽，在底层数据容量不足时可以实现自动重分配并生成新的slice</p>
+<h1 id="1-数据结构">1、数据结构</h1>
+<p>源码包中src/runtime/slice.go: slice 定义了slice的数据结构：</p>
+<pre><code>type slice struct {
+    array unsafe.Pointer
+    len int
+    cap int 
+}
+</code></pre>
+<p>从数据结构上看slice很清晰，array指针指向底层数组，len表示切片长度，cap表示底层数组容量</p>
+<h1 id="2-切片操作">2、切片操作</h1>
+<h2 id="1-使用make创建slice">1）、使用make创建slice</h2>
+<p>可同时指定长度和容量，底层分配一个数组，数组的长度为容量，例如：slice := make([]int, 5, 10)，所创建的slice结构如下<br>
+<img src="https://lsm424.github.io/post-images/1644138788104.png" alt="" width="500" loading="lazy"><br>
+该slice长度为5，可使用下标slice[0]~slice[4]来操作里面的元素，capacity为10，表示后续向slice添加新元素不必重新分配内容，直到预留内存不足时再扩容</p>
+<h2 id="2-使用数组创建slice">2)、使用数组创建slice</h2>
+<p>使用数组创建slice时，slice将与原数组共用一部分内存，例如slice := array[5:7]语句所创建的slice结构如下：<br>
+<img src="https://lsm424.github.io/post-images/1644138834532.jpg" alt="" width="500" loading="lazy"><br>
+切片从数据array[5]开始，到数组array[7]结束（不含array[7]），即切片长度为2，数组后面的内容都作为切片的预留内存，即capacity为5，意味着数组和切片共享底层内存</p>
+<h2 id="3-切片扩容">3）、切片扩容</h2>
+<p>使用append向slice追加元素时，如果slice空间不足，则会触发slice扩容，扩容实际上是重新分配一个更大的内存，将原slice的数组拷贝进新的slice，然后返回新的slice，扩容后再将数据追加进去。例如向一个 cap为5且len也为5的slice再次追加1个元素时，就会发生扩容<br>
+<img src="https://lsm424.github.io/post-images/1644138850769.jpg" alt="" width="500" loading="lazy"></p>
+<p>扩容影响cap，会把数据拷贝到新的slice中，追加数据由append在扩容结束后完成，由上图可见，slice的长度为5，但是容量由5变成10，原来slice中的数据也都拷贝到了新的slice指向的数组中。</p>
+<p>扩容的选择遵循以下原则：</p>
+<p>如果原slice的cap小雨1024，则新的容量扩大到原来的2倍。这种采用较大的扩容倍速，可以避免频繁扩容，从而减少内存分配次数和数据拷贝的代价<br>
+如果原slice的cap大于等于1024，则新的容量扩大到原来的1.25倍。这种采用较小的扩容倍速，可以避免浪费空间<br>
+同时还会考虑元素类型与内存分配原则，对实际扩张做一些微调。<br>
+4)、一些建议<br>
+创建切片可以根据实际需要分配容量，尽量避免在append过程中扩容，有利于提升性能。</p>
+<p>拷贝切片时需要判断实际拷贝的元素个数</p>
+<p>谨慎使用多个切片操作同一个数组，以防止读写冲突。</p>
 
                 </div>
             </article>
         </div>
 
+        
+            <div class="next-post">
+                <div class="next gt-c-content-color-first">下一篇</div>
+                <a href="https://lsm424.github.io/post/shu-mei-pai-zhuang-ji/" class="post-title gt-a-link">
+                    树莓派装机
+                </a>
+            </div>
         
 
         
