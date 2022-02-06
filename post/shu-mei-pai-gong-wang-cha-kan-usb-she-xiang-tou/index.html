@@ -4,7 +4,7 @@
 <meta name="description" content="" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<title>归档 | lsm424的博客</title>
+<title>树莓派公网查看usb摄像头 | lsm424的博客</title>
 
 <link rel="shortcut icon" href="https://lsm424.github.io/favicon.ico?v=1644160996684">
 
@@ -25,11 +25,11 @@
 
 
 
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.css">
 </head>
 <body>
 <div class="main gt-bg-theme-color-first">
-    <div class="main-content">
-        <nav class="navbar navbar-expand-lg">
+    <nav class="navbar navbar-expand-lg">
     <a class="navbar-brand" href="/">
         <img class="user-avatar" src="/images/avatar.png" alt="头像">
         <div class="site-name gt-c-content-color-first">
@@ -97,108 +97,89 @@
     }
 </script>
 
-        <div class="post-container">
-            <div class="post-detail gt-bg-theme-color-first">
-                <article class="gt-post-content">
-                    <h2 class="post-title">归档</h2>
+    <div class="post-container">
+        <div class="post-detail gt-bg-theme-color-second">
+            <article class="gt-post-content">
+                <h2 class="post-title">
+                    树莓派公网查看usb摄像头
+                </h2>
+                <div class="post-info">
+                    <time class="post-time gt-c-content-color-first">
+                        · 2022-02-06 ·
+                    </time>
+                    
+                        <a href="https://lsm424.github.io/tag/zdcGJDZzN/" class="post-tags">
+                            # 树莓派
+                        </a>
+                    
+                </div>
+                <div class="post-content">
+                    <h1 id="1-确认usb摄像头正常">1、确认usb摄像头正常</h1>
+<h2 id="1-分别在usb摄像头插入20usb口前后执行lsusb命令看到是否有摄像头设备">1）、分别在usb摄像头插入2.0usb口前后，执行lsusb命令，看到是否有摄像头设备</h2>
+<h2 id="2-查看设备文件">2）、查看设备文件</h2>
+<p>插上usb摄像头后，会多/dev/video0设备文件<br>
+测试抓图</p>
+<pre><code>sudo apt-get install fswebcam
+fswebcam /dev/video0 ~/image.jpg
+</code></pre>
+<p>界面模式下测试实时视频</p>
+<pre><code>sudo apt-get install luvcview
+luvcview -s 1080x720
+</code></pre>
+<h1 id="2-安装mjpeg-stream">2、安装mjpeg-stream</h1>
+<h2 id="1-安装依赖">1）、安装依赖</h2>
+<pre><code>sudo apt-get install ibjpeg8-dev cmake git
+</code></pre>
+<h2 id="2-下载mjpeg-stream安装">2）、下载mjpeg-stream安装</h2>
+<pre><code>wget https://github.com/jacksonliam/mjpg-streamer/archive/master.zip
+unzip mjpg-streamer-master.zip
+cd mjpg-streamer/mjpg-streamer-experimental
+sudo make USE_LIBV4L2=true clean all 
+sudo cp *.so /usr/lib/
+</code></pre>
+<p>以http服务启动usb摄像头</p>
+<pre><code>mjpg_streamer -o &quot;output_http.so -w ./www&quot; -i &quot;input_uvc.so -r 960x720  -f 10 &quot;
+</code></pre>
+<p>浏览器访问&quot;树莓派局域网ip:8080&quot;，进入stream tab页查看视频流<br>
+<img src="https://lsm424.github.io/post-images/1644158947261.png" alt="" width="500" loading="lazy"></p>
+<h1 id="3-sunny-ngrok内网穿透访问摄像头">3、sunny-ngrok内网穿透访问摄像头</h1>
+<p>1.7版本后的ngrok不可以自定义域名，而且它生成的域名会被微信屏蔽，选择国产的sunny-ngrok，可以免费配置自动的前置域名，而且不会被屏蔽</p>
+<h2 id="1-注册">1）、注册</h2>
+<p>访问https://www.ngrok.cc/注册<br>
+需要实名认证、支付宝人脸识别</p>
+<h2 id="2-购买隧道服务器">2）、购买隧道服务器</h2>
+<p>进入“开通隧道”，选择最后免费的“美国Ngrok免费服务器”，其他的都是收费的，但是带宽都大很多<br>
+<img src="https://lsm424.github.io/post-images/1644160027319.png" alt="" width="500" loading="lazy"><br>
+配置内网穿透的端口，以及外网的域名<br>
+<img src="https://lsm424.github.io/post-images/1644160230774.png" alt="" width="500" loading="lazy"></p>
+<h2 id="3-启动内网穿透">3）、启动内网穿透</h2>
+<p>进入“隧道管理”，看到刚才开通的隧道记录，找到对应的“隧道id”<br>
+<img src="https://lsm424.github.io/post-images/1644160463525.png" alt="" width="500" loading="lazy"><br>
+下载sunny-ngrok客户端，树莓派下载linux arm版本，输入如下命令启动隧道</p>
+<pre><code>sunny clientid 隧道id
+</code></pre>
+<p>Forwarding即为公网域名<br>
+<img src="https://lsm424.github.io/post-images/1644160664738.png" alt="" width="500" loading="lazy"></p>
+
+                </div>
+            </article>
+        </div>
+
+        
+            <div class="next-post">
+                <div class="next gt-c-content-color-first">下一篇</div>
+                <a href="https://lsm424.github.io/post/shu-mei-pai-tui-liu-b-zhan/" class="post-title gt-a-link">
+                    树莓派推流b站
+                </a>
+            </div>
         
 
-<div class="archives-container">
-    
-        <h2 class="year gt-c-cotent-color-first">2022</h2>
         
-            
-                <article class="post">
-                    <a href="https://lsm424.github.io/post/shu-mei-pai-gong-wang-cha-kan-usb-she-xiang-tou/">
-                        <div class="post-title gt-c-content-color-first">
-                            <small><b>2022-02-06&nbsp;&nbsp;·&nbsp;&nbsp;</b></small>
-                            树莓派公网查看usb摄像头
-                        </div>
-                    </a>
-                </article>
-            
-        
-            
-                <article class="post">
-                    <a href="https://lsm424.github.io/post/shu-mei-pai-tui-liu-b-zhan/">
-                        <div class="post-title gt-c-content-color-first">
-                            <small><b>2022-02-06&nbsp;&nbsp;·&nbsp;&nbsp;</b></small>
-                            树莓派推流b站
-                        </div>
-                    </a>
-                </article>
-            
-        
-            
-                <article class="post">
-                    <a href="https://lsm424.github.io/post/slice-shi-yan-yuan-li/">
-                        <div class="post-title gt-c-content-color-first">
-                            <small><b>2022-02-06&nbsp;&nbsp;·&nbsp;&nbsp;</b></small>
-                            slice实验原理
-                        </div>
-                    </a>
-                </article>
-            
-        
-            
-                <article class="post">
-                    <a href="https://lsm424.github.io/post/shu-mei-pai-zhuang-ji/">
-                        <div class="post-title gt-c-content-color-first">
-                            <small><b>2022-01-31&nbsp;&nbsp;·&nbsp;&nbsp;</b></small>
-                            树莓派装机
-                        </div>
-                    </a>
-                </article>
-            
-        
-            
-                <article class="post">
-                    <a href="https://lsm424.github.io/post/map-shi-xian-yuan-li/">
-                        <div class="post-title gt-c-content-color-first">
-                            <small><b>2022-01-29&nbsp;&nbsp;·&nbsp;&nbsp;</b></small>
-                            map实现原理
-                        </div>
-                    </a>
-                </article>
-            
-        
-            
-        
-    
-        <h2 class="year gt-c-cotent-color-first">2018</h2>
-        
-            
-        
-            
-        
-            
-        
-            
-        
-            
-        
-            
-                <article class="post">
-                    <a href="https://lsm424.github.io/post/hello-gridea/">
-                        <div class="post-title gt-c-content-color-first">
-                            <small><b>2018-12-12&nbsp;&nbsp;·&nbsp;&nbsp;</b></small>
-                            Hello Gridea
-                        </div>
-                    </a>
-                </article>
-            
-        
-    
-</div>
 
-        <div class="pagination-container">
-    
-    
-</div>
+        
 
-    </article>
-</div>
-</div>
+        
+
         <div class="site-footer gt-c-content-color-first">
     <div class="slogan gt-c-content-color-first">怕什么真理无穷，进一寸有一寸的欢喜</div>
     <div class="social-container">

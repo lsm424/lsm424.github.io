@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://lsm424.github.io</id>
     <title>lsm424的博客</title>
-    <updated>2022-02-06T14:38:45.855Z</updated>
+    <updated>2022-02-06T15:23:20.086Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://lsm424.github.io"/>
     <link rel="self" href="https://lsm424.github.io/atom.xml"/>
@@ -10,6 +10,60 @@
     <logo>https://lsm424.github.io/images/avatar.png</logo>
     <icon>https://lsm424.github.io/favicon.ico</icon>
     <rights>All rights reserved 2022, lsm424的博客</rights>
+    <entry>
+        <title type="html"><![CDATA[树莓派公网查看usb摄像头]]></title>
+        <id>https://lsm424.github.io/post/shu-mei-pai-gong-wang-cha-kan-usb-she-xiang-tou/</id>
+        <link href="https://lsm424.github.io/post/shu-mei-pai-gong-wang-cha-kan-usb-she-xiang-tou/">
+        </link>
+        <updated>2022-02-06T14:38:48.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="1-确认usb摄像头正常">1、确认usb摄像头正常</h1>
+<h2 id="1-分别在usb摄像头插入20usb口前后执行lsusb命令看到是否有摄像头设备">1）、分别在usb摄像头插入2.0usb口前后，执行lsusb命令，看到是否有摄像头设备</h2>
+<h2 id="2-查看设备文件">2）、查看设备文件</h2>
+<p>插上usb摄像头后，会多/dev/video0设备文件<br>
+测试抓图</p>
+<pre><code>sudo apt-get install fswebcam
+fswebcam /dev/video0 ~/image.jpg
+</code></pre>
+<p>界面模式下测试实时视频</p>
+<pre><code>sudo apt-get install luvcview
+luvcview -s 1080x720
+</code></pre>
+<h1 id="2-安装mjpeg-stream">2、安装mjpeg-stream</h1>
+<h2 id="1-安装依赖">1）、安装依赖</h2>
+<pre><code>sudo apt-get install ibjpeg8-dev cmake git
+</code></pre>
+<h2 id="2-下载mjpeg-stream安装">2）、下载mjpeg-stream安装</h2>
+<pre><code>wget https://github.com/jacksonliam/mjpg-streamer/archive/master.zip
+unzip mjpg-streamer-master.zip
+cd mjpg-streamer/mjpg-streamer-experimental
+sudo make USE_LIBV4L2=true clean all 
+sudo cp *.so /usr/lib/
+</code></pre>
+<p>以http服务启动usb摄像头</p>
+<pre><code>mjpg_streamer -o &quot;output_http.so -w ./www&quot; -i &quot;input_uvc.so -r 960x720  -f 10 &quot;
+</code></pre>
+<p>浏览器访问&quot;树莓派局域网ip:8080&quot;，进入stream tab页查看视频流<br>
+<img src="https://lsm424.github.io/post-images/1644158947261.png" alt="" width="500" loading="lazy"></p>
+<h1 id="3-sunny-ngrok内网穿透访问摄像头">3、sunny-ngrok内网穿透访问摄像头</h1>
+<p>1.7版本后的ngrok不可以自定义域名，而且它生成的域名会被微信屏蔽，选择国产的sunny-ngrok，可以免费配置自动的前置域名，而且不会被屏蔽</p>
+<h2 id="1-注册">1）、注册</h2>
+<p>访问https://www.ngrok.cc/注册<br>
+需要实名认证、支付宝人脸识别</p>
+<h2 id="2-购买隧道服务器">2）、购买隧道服务器</h2>
+<p>进入“开通隧道”，选择最后免费的“美国Ngrok免费服务器”，其他的都是收费的，但是带宽都大很多<br>
+<img src="https://lsm424.github.io/post-images/1644160027319.png" alt="" width="500" loading="lazy"><br>
+配置内网穿透的端口，以及外网的域名<br>
+<img src="https://lsm424.github.io/post-images/1644160230774.png" alt="" width="500" loading="lazy"></p>
+<h2 id="3-启动内网穿透">3）、启动内网穿透</h2>
+<p>进入“隧道管理”，看到刚才开通的隧道记录，找到对应的“隧道id”<br>
+<img src="https://lsm424.github.io/post-images/1644160463525.png" alt="" width="500" loading="lazy"><br>
+下载sunny-ngrok客户端，树莓派下载linux arm版本，输入如下命令启动隧道</p>
+<pre><code>sunny clientid 隧道id
+</code></pre>
+<p>Forwarding即为公网域名<br>
+<img src="https://lsm424.github.io/post-images/1644160664738.png" alt="" width="500" loading="lazy"></p>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[树莓派推流b站]]></title>
         <id>https://lsm424.github.io/post/shu-mei-pai-tui-liu-b-zhan/</id>
