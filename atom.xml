@@ -2,7 +2,7 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
     <id>https://lsm424.github.io</id>
     <title>lsm424的博客</title>
-    <updated>2022-02-06T09:16:05.450Z</updated>
+    <updated>2022-02-06T13:32:57.360Z</updated>
     <generator>https://github.com/jpmonette/feed</generator>
     <link rel="alternate" href="https://lsm424.github.io"/>
     <link rel="self" href="https://lsm424.github.io/atom.xml"/>
@@ -10,6 +10,43 @@
     <logo>https://lsm424.github.io/images/avatar.png</logo>
     <icon>https://lsm424.github.io/favicon.ico</icon>
     <rights>All rights reserved 2022, lsm424的博客</rights>
+    <entry>
+        <title type="html"><![CDATA[树莓派推流b站]]></title>
+        <id>https://lsm424.github.io/post/shu-mei-pai-tui-liu-b-zhan/</id>
+        <link href="https://lsm424.github.io/post/shu-mei-pai-tui-liu-b-zhan/">
+        </link>
+        <updated>2022-02-06T09:16:25.000Z</updated>
+        <content type="html"><![CDATA[<h1 id="1-安装ffmepg">1、安装ffmepg</h1>
+<h2 id="1-安装yasm插件">1)、安装yasm插件</h2>
+<pre><code>wget http://www.tortall.net/projects/yasm/releases/yasm-1.3.0.tar.gz
+tar -xvf yasm-1.3.0.tar.gz
+cd yasm-1.3.0/
+./configure &amp;&amp; make &amp;&amp; sudo make install
+</code></pre>
+<h3 id="2-安装ffmpeg">2)、安装ffmpeg</h3>
+<pre><code>wget http://www.ffmpeg.org/releases/ffmpeg-3.4.tar.gz
+tar -xvf ffmpeg-3.4.tar.gz
+cd ffmpeg-3.4/
+./configure &amp;&amp; make &amp;&amp; sudo make install
+</code></pre>
+<p>这里编译会很久，差不多1个小时</p>
+<h1 id="2-安装x264">2、安装x264</h1>
+<pre><code>git clone git://git.videolan.org/x264.git
+cd x264
+#我们需要的是x264以.so or .a的形式来支援ffmpeg，所以一般就关注shared和static关键词就可以了
+./configure --enable-shared --enable-static &amp;&amp; make &amp;&amp; sudo make install
+</code></pre>
+<p>这是采集摄像头数据需要的解码库</p>
+<h1 id="2-开启b站直播间">2、开启b站直播间</h1>
+<p><img src="https://lsm424.github.io/post-images/1644139446027.png" alt="" width="500" loading="lazy"><br>
+将<strong>服务器地址</strong>和<strong>串流密钥</strong>拼接作为rmtp直播间推流地址，准备推流视频文件推流</p>
+<pre><code>ffmpeg -re -i test.mp4 -vcodec copy -acodec aac -b:a 192k -f flv  'rtmp://live-push.bilivideo.com/live-bvc/?streamname=live_438452137_32469257&amp;key=ec69f90c6d679654c65bcd02c9411922&amp;schedule=rtmp&amp;pflag=1'
+</code></pre>
+<p>然后可以进入直播间看到视频内容了。</p>
+<p><strong>关于-re参数的作用：<br>
+默认情况下，ffmpeg尝试以尽可能快的速度读取输入，在直播时会会产生跳帧，而-re会将输入的读取速度降低到输入的本地帧速率。它对于实时输出(例如直播流)很有用。</strong></p>
+]]></content>
+    </entry>
     <entry>
         <title type="html"><![CDATA[slice实验原理]]></title>
         <id>https://lsm424.github.io/post/slice-shi-yan-yuan-li/</id>
