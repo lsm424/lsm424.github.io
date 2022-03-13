@@ -1,0 +1,332 @@
+<html>
+<head>
+    <meta charset="utf-8" />
+<meta name="description" content="" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<title>go内存管理 | lsm424的博客</title>
+
+<link rel="shortcut icon" href="https://lsm424.github.io/favicon.ico?v=1647139652207">
+
+<link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://lsm424.github.io/styles/main.css">
+<!-- <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/css/bootstrap.min.css"> -->
+
+<script src="https://cdn.jsdelivr.net/npm/@highlightjs/cdn-assets/highlight.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.15.10/languages/dockerfile.min.js"></script>
+<script src="https://cdn.bootcss.com/highlight.js/9.15.10/languages/dart.min.js"></script>
+
+<!-- <script src="https://cdn.jsdelivr.net/npm/moment@2.27.0/moment.min.js"></script> -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"></script> -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script> -->
+<!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.0/dist/js/bootstrap.min.js"></script> -->
+<!-- DEMO JS -->
+<!--<script src="media/scripts/index.js"></script>-->
+
+
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.css">
+</head>
+<body>
+<div class="main gt-bg-theme-color-first">
+    <nav class="navbar navbar-expand-lg">
+    <a class="navbar-brand" href="/">
+        <img class="user-avatar" src="/images/avatar.png" alt="头像">
+        <div class="site-name gt-c-content-color-first">
+            lsm424的博客
+        </div>
+    </a>
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation" id="changeNavbar">
+        <i class="fas fa-bars gt-c-content-color-first" style="font-size: 18px"></i>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <div class="navbar-nav mr-auto" style="text-align: center">
+            
+            <div class="nav-item">
+                
+                <a href="/" class="menu gt-a-link" target="_blank">
+                    首页
+                </a>
+                
+            </div>
+            
+            <div class="nav-item">
+                
+                <a href="/go" class="menu gt-a-link" target="_blank">
+                    GO
+                </a>
+                
+            </div>
+            
+            <div class="nav-item">
+                
+                <a href="/raspberry" class="menu gt-a-link" target="_blank">
+                    树莓派
+                </a>
+                
+            </div>
+            
+            <div class="nav-item">
+                
+                <a href="/post/about" class="menu gt-a-link" target="_blank">
+                    关于
+                </a>
+                
+            </div>
+            
+        </div>
+        <div style="text-align: center">
+            <form id="gridea-search-form" style="position: relative" data-update="1647139652207"
+                action="/search/">
+                <input class="search-input" autocomplete="off" spellcheck="false" name="q" placeholder="搜索文章" />
+                <i class="fas fa-search gt-c-content-color-first" style="position: absolute; top: 9px; left: 10px;"></i>
+            </form>
+        </div>
+    </div>
+</nav>
+<script>
+    /* 移动端导航栏展开/收起切换 */
+    document.getElementById('changeNavbar').onclick = () => {
+        var element = document.getElementById('navbarSupportedContent');
+        if (element.style.display === 'none' || element.style.display === '') {
+            element.style.display = 'block';
+        } else {
+            element.style.display = 'none';
+        }
+    }
+</script>
+
+    <div class="post-container">
+        <div class="post-detail gt-bg-theme-color-second">
+            <article class="gt-post-content">
+                <h2 class="post-title">
+                    go内存管理
+                </h2>
+                <div class="post-info">
+                    <time class="post-time gt-c-content-color-first">
+                        · 2022-03-13 ·
+                    </time>
+                    
+                        <a href="https://lsm424.github.io/tag/go/" class="post-tags">
+                            # go
+                        </a>
+                    
+                </div>
+                <div class="post-content">
+                    <h1 id="一-内存分配">一、内存分配</h1>
+<p>  go语言自带内存分配器，原理与tcmalloc类似，也就是说维护一块大的全局内存，每个线程（go中处理器P）维护一块小的私有内存，等私有内存不足时再从全局申请。</p>
+<p>  另外，内存分配与GC有密切关系，所以了解GC之前要了解内存分配</p>
+<h2 id="1-基础概念">1、基础概念：</h2>
+<p>  go进程启动时向系统申请的内存如下三个区域<br>
+<img src="https://lsm424.github.io/post-images/1647137857327.png" alt="" width="500" loading="lazy"><br>
+  arena即堆区，应用所需要的内存从这里分配，spans和bitmap是为了管理arena区而存在的。arena划分成page页，<strong>每个页（page）大小为8KB</strong>，共有512GB/8KB个页</p>
+<p>  spans区域存放span指针，每个指针对一个或者多个page，所以span区域的大小为512GB/8KB * 指针大小（8byte）=512MB</p>
+<p>  bitmap区域的大小也是通过arena计算得到，不过主要用于GC</p>
+<h3 id="1-span">1)、span</h3>
+<p>  span是用于管理arena页的关键数据，每个span包含一个或者多个连续页，为了满足小对象分配，会将span中的一页划分成更小的粒度，而对于大对象比如超过页大小，则通过多页实现。<br>
+（1）、class<br>
+  根据对象大小，划分一系列class，每个class代表一个固定大小的对象，以及每个span的大小</p>
+<pre><code>class	  bytes/obj		bytes/span      objects     waste bytes
+1		8	        8192	        1024         0
+2		16	        8192            512          0
+...
+1.              144             8192            56          128
+...
+66          32768		32768		
+</code></pre>
+<p>class：表示ID，该span可以处理的对象类型<br>
+bytes/obj：该class代表对象的字节数<br>
+bytes/span：每个span对象占用堆的字节数，即页数x页大小<br>
+objects：每个span可以分配的对象个数，即（bytes/span）/ （bytes/obj）<br>
+waste bytes：每个span产生的内存碎片，即（bytes/span）%（bytes/obj）</p>
+<p>上面最大的对象为32KB，超过32KB的对象由class ID为0的class表示，每个class只能包含一个对象。</p>
+<p>(2）、span数据结构<br>
+  span是内存管理的基本单位，每个span用于管理特定的class对象。结构如下：</p>
+<pre><code>// src/runtime/mheap.go: mspan
+type mspan struct {
+	next *mspan      // 链表后指针
+	prev *mspan		 // 链表前指针
+	startAddr uintptr  // 管理页起始地址
+        npages uintptr		// 管理的页数
+	nelems uintptr		// 块个数，即有多少个块可以分配
+	allocBits	*gcBit	// 分配位图，每一位代表一个块是否已分配
+        gcmarkBits   *gcBit // 引用分配位图，每一位代表一个块是否有引用，用于GC
+	allocCount  uint16	// 已分配块的个数
+	spanclass spanClass	 // class表中的class ID
+	elemsize  uintptr	// class表的对象大小，即块大小
+}
+</code></pre>
+<p>例如一个class 10的span如下：<br>
+<img src="https://lsm424.github.io/post-images/1647138632277.png" alt="" width="500" loading="lazy"></p>
+<h3 id="2-cache">2)  、cache</h3>
+<p>  有了span，就要有管理span的数据结构，这个结构是mcentral，各线程需要内存时，从mcentral管理的span中申请内存，为了避免多线程申请内存时不断的加锁，Go为每个线程分配了span缓存，叫做cache。结构如下：</p>
+<pre><code>// src/runtime/mcache.go: mcahe
+type mcache struct {
+	alloc	[67 * 2]*mspan	// 按照class分组的mspan列表
+}
+</code></pre>
+<p>  数组的大小为class种类的2倍，每一个元素代表了一种class类型的span列表，每种class类型都有两组span列表。第一组列表表示的对象包含了指针；第二组不包含指针，这样gc时没必要扫描，提高gc性能。<br>
+<img src="https://lsm424.github.io/post-images/1647138705399.png" alt="" width="500" loading="lazy"><br>
+  cache在初始化时候没有任何span，在使用过程中动态从central获取并缓存。<br>
+每种class的数量各不相同，如上图，class 0的个数比class1的个数要多，说明本线程中分配的小对象要多一些。</p>
+<h3 id="3-central">3)、central</h3>
+<p>  cache作为每个线程的私有资源，而central则为全局资源</p>
+<pre><code>// src/runtime/mcentral.go: mcentral
+type mcache struct {
+	lock	mutex	// 互斥锁
+	spanclass spanClass 	// span class ID
+	nonempty mSpanList	// 指还有空闲块的span列表
+	empty mSpanList	 // 指没有空闲块的span列表
+	nmalloc	 uint64	 // 已累计分配的对象个数
+}
+</code></pre>
+<p>线程从central中获取span的步骤如下：<br>
+a、加锁<br>
+b、从nonempty列表中获取一个可用的span，并将其从链表中删除。<br>
+c、将取出的span放入empty链表<br>
+d、将span返回给线程<br>
+e、解锁<br>
+g、线程将该span缓存进cache</p>
+<h3 id="4-heap">4)、heap</h3>
+<p>  从central的结构可见，每种central只管理特定规格的class的span。事实上每种class都会对应一个mcentral，这个mcentral的集合放于mheap中</p>
+<pre><code>// src/runtime/mheap.go: mheap
+type mheap struct {
+	lock	mutex	// 互斥锁
+	spans  []*mspan 	// span class ID
+	bitmap  uintptr		// 指向bitmap的首地址，bitmap是从高地址向低地址增长的。
+	arena_start uintptr  // 指示arena区域的首地址
+ 	arena_end uintptr	 // 指示arena区域已使用的地址位置。 
+        central [67*2] struct {
+		mcentral mcentral
+        pad [sys.CacheLineSize - unsafe.Sizeof(mcentral{}) % sys.CacheLineSize] byte
+   }
+</code></pre>
+<p>可见，mheap管理全部内存，事实上，go就是通过一个mheap类型的全局变量进行内存管理的。示意图如下<br>
+<img src="https://lsm424.github.io/post-images/1647138823446.png" alt="" width="500" loading="lazy"></p>
+<h2 id="2-内存分配">2、内存分配</h2>
+<p>  针对对象大小不同有不同的分配逻辑：</p>
+<ul>
+<li>（0，16B）且不包含指针的对象：Tiny分配</li>
+<li>（0，16B）且包含指针的对象：正常分配</li>
+<li>[16B,32KB]：正常分配</li>
+<li>（32KB，）：大对象分配<br>
+  其中Tiny分配和大对象分配都属于内存管理的优化范畴，这里暂时仅关注正常分配的方法，以申请size为n的内存为例，分配步骤如下：<br>
+a、获取当前线程私有换成mcache<br>
+b、根据size计算出合同的class的ID<br>
+c、从mcache的alloc[class]链表中查询可用的span<br>
+d、如果mcache中没有可用的span，则从mcentral申请一个新的span加入mcache<br>
+e、如果mcache中也没有可用的span，则从mheap中申请一个新的span加入mcentral。<br>
+f、从该span中获取空闲对象的地址返回。</li>
+</ul>
+<h1 id="二-垃圾回收">二、垃圾回收</h1>
+<h2 id="1-常用垃圾回收算法">1、常用垃圾回收算法：</h2>
+<ul>
+<li><strong>引用计数</strong>：对每个对象维护一个引用计数，当引用该对象的对象销毁时，引用计数减1，当引用计数位0时回收该对象<br>
+              优点：对象可以很快回收，不会出现内存耗尽或达到某个阈值才回收<br>
+              缺点：不能很好的处理循环引用，而且实时维护引用计数也有一定的代价。<br>
+             代表语言：python、php</li>
+<li><strong>标记清理</strong>：从根变量开始遍历所有的引用对象，引用对象标记为“被引用”，没有标记的对象被回收<br>
+             优点：解决了引用计数的缺点<br>
+             缺点：需要STW，即暂停程序运行。<br>
+             代表语言：Go</li>
+<li><strong>分代收集</strong>：按照对象生命周期的长短划分不同的代空间，生命周期长的放入老年代，而短的放入新生代，不同代有不同的回收算法和频率。<br>
+             优点：回收性能好<br>
+             缺点：算法复杂。<br>
+             代表语言：Java</li>
+</ul>
+<h2 id="2-垃圾回收">2、垃圾回收</h2>
+<h3 id="1-垃圾回收原理">1）、垃圾回收原理</h3>
+<p>  垃圾回收从root对象开始扫描，把root对象引用的内存标记为“被应用”，考虑到内存块中存放的可能是指针，所以还需要递归标记。对未标记的内容全部标记为“未分配”完成回收<br>
+  下图中，内存中的1、2、4号位上已经被分配，变量a、b为指针，执向内存的1、2号位。内存块的4号位曾经被引用过，但是现在没有任何引用，就需要被回收<br>
+<img src="https://lsm424.github.io/post-images/1647139301261.png" alt="" width="500" loading="lazy"></p>
+<h3 id="2-三色标记法">2）、三色标记法</h3>
+<p>三色对应gc过程中的三种状态：</p>
+<ul>
+<li>灰色：对象还在标记队列中等待</li>
+<li>黑色：对象已被标记，gcmarkBits对应的位为1（该对象不会在本次GC中被清理）</li>
+<li>白色：对象未被标记，gcmarkBits对应的位为0（该对象会在本次GC中被清理）</li>
+</ul>
+<p>下面演示标记过程：<br>
+  当内存有A-F6个对象，根对象a、b本身为栈上分配的局部变量，根对象a、b分别引用了对象A、B，而B对象又引用 了对象D，则GC开始前对各对象的状态如下所示。<br>
+<img src="https://lsm424.github.io/post-images/1647139108825.png" alt="" width="500" loading="lazy"></p>
+<p>  a）、初始状态下所有对象都是白色的，接着扫描根对象a、b，由于引用了A、B，则A、B变成灰色对象。<br>
+<img src="https://lsm424.github.io/post-images/1647139141629.png" alt="" width="500" loading="lazy"><br>
+  b）、接下来分析灰色对象，对于A，没有引用其他对象，很快变成黑色对象，B引用了D，则B转入黑色的同时会将D转成灰色，<br>
+<img src="https://lsm424.github.io/post-images/1647139166916.png" alt="" width="500" loading="lazy"><br>
+  c）、由于D没有引用其他对象，所以D转成黑色对象<br>
+<img src="https://lsm424.github.io/post-images/1647139241662.png" alt="" width="500" loading="lazy"></p>
+<h3 id="3-stw">3）、STW</h3>
+<p>  对于GC，需要控制内存变化，否则在回收过程中指针传递会引起内存引用关系变化，如果错误的回收还在使用的内存，那么结果将是灾难性的。<br>
+  Go中的STW就是停止所有的goroutine，专心做垃圾回收，待回收完成后再恢复goroutine。STW的长短直接影响了应用的执行。</p>
+<h3 id="4-gc的触发时机">4）、GC的触发时机</h3>
+<p>a、内存分配量达到阈值触发GC<br>
+  每次内存分配时，当前内存分配量是否达到阈值，如果达到阈值则立即启动GC。</p>
+<pre><code>阈值 = 上次GC内存分配量 x 内存增长率
+</code></pre>
+<p>  内存增长率由于环境变量GOGC控制，默认100，即当内存扩大一倍时启动GC。<br>
+b、定期触发GC<br>
+   默认情况下，最长2分钟触发一次GC，这个间隔在</p>
+<pre><code>src/runtime/proc.go:forcegcperiod
+var forcegcperiod int64 = 2 * 60 * 1e9
+</code></pre>
+<p>c、手动触发<br>
+  .GC()手动触发，主要用于性能测试和统计。</p>
+<h2 id="3-gc性能优化">3、GC性能优化</h2>
+<p>  gc性能与对象数量负相关，对象数量越多，性能越差。<br>
+  所以GC优化的思路之一是减少对象分配的个数，比如对象复用或者使用大结构组合多个小对象。<br>
+另外，内存逃逸会产生一些隐式的内存分配，也有可能成为GC的负担。</p>
+
+                </div>
+            </article>
+        </div>
+
+        
+            <div class="next-post">
+                <div class="next gt-c-content-color-first">下一篇</div>
+                <a href="https://lsm424.github.io/post/shu-mei-pai-gong-wang-cha-kan-usb-she-xiang-tou/" class="post-title gt-a-link">
+                    树莓派公网查看usb摄像头
+                </a>
+            </div>
+        
+
+        
+
+        
+
+        
+
+        <div class="site-footer gt-c-content-color-first">
+    <div class="slogan gt-c-content-color-first">怕什么真理无穷，进一寸有一寸的欢喜</div>
+    <div class="social-container">
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+            
+        
+    </div>
+    <div class="footer-info">
+        Powered by <a href="https://github.com/getgridea/gridea" target="_blank">Gridea</a>
+    </div>
+    <div>
+        Theme by <a href="https://imhanjie.com/" target="_blank">imhanjie</a>, Powered by <a
+                href="https://github.com/getgridea/gridea" target="_blank">Gridea | <a href="https://lsm424.github.io/atom.xml" target="_blank">RSS</a></a>
+    </div>
+</div>
+
+<script>
+  hljs.highlightAll()
+</script>
+
+    </div>
+</div>
+</body>
+</html>
